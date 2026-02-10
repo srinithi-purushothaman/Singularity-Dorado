@@ -22,4 +22,5 @@ singularity exec --nv dorado_sandbox/ dorado --help # --nv indicatees the use of
 
 - GPU basecalling requires NVIDIA drivers on the host system.
 - Make sure the NVIDIA driver version in your HPC environment is compatible with the container and CUDA requirements.
+- Commands may use `apptainer` instead of `singularity` depending on the cluster.
 
