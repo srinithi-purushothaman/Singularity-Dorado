@@ -18,6 +18,11 @@ singularity build --sandbox dorado_sandbox/ dorado.sif
 ```
 singularity exec --nv dorado_sandbox/ dorado --help # --nv indicatees the use of GPUs
 ```
+## Tested environment
+HPC scheduler: SLURM
+GPU: NVIDIA A100 and V100
+Singularity version: 3.12
+
 ## Notes
 
 - GPU basecalling requires NVIDIA drivers on the host system.
