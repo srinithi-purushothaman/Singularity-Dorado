@@ -1,0 +1,72 @@
+Bootstrap: library
+From: ubuntu:22.04
+
+%help
+This is a container that runs dorado.
+
+%labels
+dorado
+
+%environment
+LANG=C.UTF-8
+LC_ALL=C.UTF-8
+export LANG LC_ALL
+
+LD_LIBRARY_PATH=/usr/local/cuda-12.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+
+%test
+# Exits with 255 (!?!)
+dorado --help
+dorado --version
+
+%post
+export DEBIAN_FRONTEND=noninteractive
+
+# update system and install prerequisites
+apt-get -qq update && apt-get -qq install -y --no-install-recommends curl \
+        git \
+        ca-certificates \
+        build-essential \
+        libhdf5-dev \
+        libssl-dev \
+        libzstd-dev \
+        autoconf \
+        automake \
+        software-properties-common \
+        wget \
+        lsb-release \
+	gcc-12 \
+	g++-12 \
+
+
+
+export PLATFORM=$(lsb_release -cs)
+
+
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda-repo-ubuntu2204-12-0-local_12.0.0-525.60.13-1_amd64.deb
+dpkg -i cuda-repo-ubuntu2204-12-0-local_12.0.0-525.60.13-1_amd64.deb
+cp /var/cuda-repo-ubuntu2204-12-0-local/cuda-*-keyring.gpg /usr/share/keyrings/
+apt-get update
+apt-get -y install cuda-toolkit-12-0
+
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+#echo 'LD_LIBRARY_PATH=/usr/local/cuda-12.0/targets/x86_64-linux/lib:$LD_LIBRARY_PATH' >> /environment
+
+
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+
+
+apt update
+apt-get -qq install -y --no-install-recommends cmake
+
+git clone https://github.com/nanoporetech/dorado.git dorado
+cd dorado
+cmake -S . -B cmake-build
+cmake --build cmake-build --config Release -j1
+ctest --test-dir cmake-build
+
+cmake --install cmake-build --prefix /usr/local
